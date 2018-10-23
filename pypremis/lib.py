@@ -183,7 +183,7 @@ class PremisRecord(object):
 
         * (PremisNode or None): an event PremisNode, or None
         """
-        self.events_list.get_nodes(eventID)
+        self.events_list.get_nodes(eventID)[0]
 
     def get_event_list(self):
         """
@@ -218,7 +218,7 @@ class PremisRecord(object):
 
         * (PremisNode or None): an object PremisNode, or None
         """
-        self.objects_list.get_nodes(objID)
+        self.objects_list.get_nodes(objID)[0]
 
     def get_object_list(self):
         """
@@ -253,7 +253,7 @@ class PremisRecord(object):
 
         * (PremisNode or None): an event PremisNode, or None
         """
-        return self.agents_list.get_nodes(agentID)
+        return self.agents_list.get_nodes(agentID)[0]
 
     def get_agent_list(self):
         """
@@ -289,7 +289,7 @@ class PremisRecord(object):
 
         * (PremisNode or None): a rights PremisNode, or None
         """
-        self.rights_list.get_nodes(rightsID)
+        self.rights_list.get_nodes(rightsID)[0]
 
     def get_rights_list(self):
         """

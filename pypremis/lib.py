@@ -6,9 +6,77 @@ from pypremis.nodes import *
 """
 ### Classes for general use in pypremis ###
 
-1. **PremisRecord** is a containing class meant to hold a list of sorted nodes
+1. **PremisRecord** is a containing class meant to hold nodes
 and facilitate writing them to reading and writing serializations.
 """
+
+
+class NodeSet:
+    """
+    A utility container class for internal use by PremisRecord. Holds pypremis nodes indexed by identifier.
+    The identifier is a string constructed by joining the appropriate PREMIS identifier type and identifier
+    value for that node type (e.g. objectIdentifierType and objectIdentifierValue for Object nodes,
+    rightsStatementIdentifierType and rightsStatementIdentifierValue for a Rights node, etc.), separated by
+    a ':' character.
+
+    The purpose of this subsidiary class is to facilitate the retrieval of nodes by identifier.
+    """
+    def __init__(self, node_list=None):
+        """
+        Initializes a NodeSet object from a list of pypremis nodes, if provided.
+        Otherwise, returns an empty object.
+        """
+        self.nodes = {}
+
+        if node_list:
+            pass
+
+    def get_nodes(self, identifier=None):
+        """
+        Return node (or list of nodes) corresponding to a given identifier (or list of identifiers).
+
+        If identifier is None, then return a list of all nodes in the NodeSet.
+        """
+        identifier_type = type(identifier)
+        if identifier_type is str:
+            return self.nodes[identifier]
+        if identifier_type is list:
+            return [self.nodes[key] for key in identifier]
+        if identifier is None:
+            return self.nodes.values()
+        return []  # in the case of a nonsensical identifier, return an empty list
+
+    def append(self, node):
+        """
+        Append a node to a NodeSet. The identifier of the node being appended is checked against existing
+        identifiers in the NodeSet. If the identifier already exists and the objects are equivalent,
+        then append_node() returns silently. If the objects are not equivalent, then an IdentifierCollisionError
+        exception is thrown.
+
+        That's the plan, at least...
+        """
+        node_type = type(node)
+        if node_type == Object:
+            identifier_type = node.get_objectIdentifier(0).get_objectIdentifierType()
+            identifier_value = node.get_objectIdentifier(0).get_objectIdentifierValue()
+            key = "{}:{}".format(identifier_type, identifier_value)
+            self.nodes[key] = node
+        if node_type == Event:
+            identifier_type = node.get_eventIdentifier(0).get_eventIdentifierType()
+            identifier_value = node.get_eventIdentifier(0).get_eventIdentifierValue()
+            key = "{}:{}".format(identifier_type, identifier_value)
+            self.nodes[key] = node
+        if node_type == Agent:
+            identifier_type = node.get_agentIdentifier(0).get_agentIdentifierType()
+            identifier_value = node.get_agentIdentifier(0).get_agentIdentifierValue()
+            key = "{}:{}".format(identifier_type, identifier_value)
+            self.nodes[key] = node
+        if node_type == Rights:
+            identifier_type = node.get_rightsStatementIdentifier(0).get_rightsStatementIdentifierType()
+            identifier_value = node.get_rightsStatementIdentifier(0).get_rightsStatementIdentifierValue()
+            key = "{}:{}".format(identifier_type, identifier_value)
+            self.nodes[key] = node
+
 
 
 class PremisRecord(object):
@@ -49,10 +117,10 @@ class PremisRecord(object):
             raise ValueError("Must supply either a valid file or at least "
                              "one array of valid PREMIS objects.")
 
-        self.events_list = []
-        self.objects_list = []
-        self.agents_list = []
-        self.rights_list = []
+        self.events_list = NodeSet()
+        self.objects_list = NodeSet()
+        self.agents_list = NodeSet()
+        self.rights_list = NodeSet()
         self.filepath = None
 
         if frompath:
@@ -139,7 +207,7 @@ class PremisRecord(object):
 
         * (list): the self.events_list attribute
         """
-        return self.events_list
+        return self.events_list.get_nodes()
 
     def add_object(self, obj):
         """
@@ -174,7 +242,7 @@ class PremisRecord(object):
 
         * (list): the self.objects_list attribute
         """
-        return self.objects_list
+        return self.objects_list.get_nodes()
 
     def add_agent(self, agent):
         """
@@ -209,7 +277,7 @@ class PremisRecord(object):
 
         * (list): the self.agents_list attribute
         """
-        return self.agents_list
+        return self.agents_list.get_nodes()
 
     def add_rights(self, rights):
         """
@@ -244,7 +312,7 @@ class PremisRecord(object):
 
         * (list): the self.rights_list attribute
         """
-        return self.rights_list
+        return self.rights_list.get_nodes()
 
     def set_filepath(self, filepath):
         """

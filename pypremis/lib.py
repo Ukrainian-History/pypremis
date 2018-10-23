@@ -14,69 +14,55 @@ and facilitate writing them to reading and writing serializations.
 class NodeSet:
     """
     A utility container class for internal use by PremisRecord. Holds pypremis nodes indexed by identifier.
-    The identifier is a string constructed by joining the appropriate PREMIS identifier type and identifier
-    value for that node type (e.g. objectIdentifierType and objectIdentifierValue for Object nodes,
-    rightsStatementIdentifierType and rightsStatementIdentifierValue for a Rights node, etc.), separated by
-    a ':' character.
+    The identifiers are strings containing the XML serializations of the PREMIS identifier sub-nodes of the top-level
+    node. Note that Object and Agent nodes may have more than one identifier, and Rights nodes may have more than
+    one rightsStatementIdentifier. In those cases, the same object will be indexed by more than one identifier.
 
     The purpose of this subsidiary class is to facilitate the retrieval of nodes by identifier.
     """
-    def __init__(self, node_list=None):
+    def __init__(self):
         """
-        Initializes a NodeSet object from a list of pypremis nodes, if provided.
-        Otherwise, returns an empty object.
+        Initializes an empty NodeSet object.
         """
         self.nodes = {}
 
-        if node_list:
-            pass
-
     def get_nodes(self, identifier=None):
         """
-        Return node (or list of nodes) corresponding to a given identifier (or list of identifiers).
+        Return a list of nodes corresponding to a given identifier (or list of identifiers).
 
         If identifier is None, then return a list of all nodes in the NodeSet.
         """
         identifier_type = type(identifier)
         if identifier_type is str:
-            return self.nodes[identifier]
+            return [self.nodes[identifier]]
         if identifier_type is list:
             return [self.nodes[key] for key in identifier]
         if identifier is None:
-            return self.nodes.values()
+            return list(self.nodes.values())  # TODO oh dear, what if there are multiple keys for the same object?
         return []  # in the case of a nonsensical identifier, return an empty list
 
     def append(self, node):
         """
-        Append a node to a NodeSet. The identifier of the node being appended is checked against existing
-        identifiers in the NodeSet. If the identifier already exists and the objects are equivalent,
-        then append_node() returns silently. If the objects are not equivalent, then an IdentifierCollisionError
-        exception is thrown.
-
-        That's the plan, at least...
+        Add a node to a NodeSet. If there is an existing NodeSet node with the same identifier, then it
+        will be replaced with the new node.
         """
         node_type = type(node)
-        if node_type == Object:
-            identifier_type = node.get_objectIdentifier(0).get_objectIdentifierType()
-            identifier_value = node.get_objectIdentifier(0).get_objectIdentifierValue()
-            key = "{}:{}".format(identifier_type, identifier_value)
-            self.nodes[key] = node
-        if node_type == Event:
-            identifier_type = node.get_eventIdentifier(0).get_eventIdentifierType()
-            identifier_value = node.get_eventIdentifier(0).get_eventIdentifierValue()
-            key = "{}:{}".format(identifier_type, identifier_value)
-            self.nodes[key] = node
-        if node_type == Agent:
-            identifier_type = node.get_agentIdentifier(0).get_agentIdentifierType()
-            identifier_value = node.get_agentIdentifier(0).get_agentIdentifierValue()
-            key = "{}:{}".format(identifier_type, identifier_value)
-            self.nodes[key] = node
-        if node_type == Rights:
-            identifier_type = node.get_rightsStatementIdentifier(0).get_rightsStatementIdentifierType()
-            identifier_value = node.get_rightsStatementIdentifier(0).get_rightsStatementIdentifierValue()
-            key = "{}:{}".format(identifier_type, identifier_value)
-            self.nodes[key] = node
 
+        if node_type == Object:
+            keys = [str(identifier.toXML()) for identifier in node.get_objectIdentifier()]
+
+        if node_type == Event:
+            keys = [str(node.get_eventIdentifier().toXML())]
+
+        if node_type == Agent:
+            keys = [str(identifier.toXML()) for identifier in node.get_agentIdentifier()]
+
+        if node_type == Rights:
+            keys = [str(rights_statement.get_rightsStatementIdentifier().toXML())
+                    for rights_statement in node.get_rightsStatement()]
+
+        for key in keys:
+            self.nodes[key] = node
 
 
 class PremisRecord(object):
@@ -190,22 +176,22 @@ class PremisRecord(object):
 
         __Args__
 
-        1. eventID (str): A string which corresponds to one of the
-        eventIdentifierValue's specified in an Event PremisNode instance.
+        1. eventID (str): A string containing the XML serialization of the
+        eventIdentifier semantic unit in an Event PremisNode instance
 
         __Returns__
 
         * (PremisNode or None): an event PremisNode, or None
         """
-        pass
+        self.events_list.get_nodes(eventID)
 
     def get_event_list(self):
         """
-        Returns a list containing each associated event node.
+        Returns a list containing all event nodes.
 
         __Returns__
 
-        * (list): the self.events_list attribute
+        * (list): the Event PremisNode instances in a PremisRecord instance
         """
         return self.events_list.get_nodes()
 
@@ -225,22 +211,22 @@ class PremisRecord(object):
 
         __Args__
 
-        1. objID (str): A string which corresponds with one of the
-        objectIdentifierValue's specified in an Object PremisNode instance
+        1. objID (str): A string containing the XML serialization of one of the
+        objectIdentifier semantic units in an Object PremisNode instance
 
         __Returns__
 
         * (PremisNode or None): an object PremisNode, or None
         """
-        pass
+        self.objects_list.get_nodes(objID)
 
     def get_object_list(self):
         """
-        Returns a list containing each object node.
+        Returns a list containing all object nodes.
 
         __Returns__
 
-        * (list): the self.objects_list attribute
+        * (list): the Object PremisNode instances in a PremisRecord instance
         """
         return self.objects_list.get_nodes()
 
@@ -260,22 +246,22 @@ class PremisRecord(object):
 
         __Args__
 
-        1. agentID (str): A string which corresponds with one of the
-        agentIdentifierValue's specified in an Agent PremisNode instance
+        1. agentID (str): A string containing the XML serialization of one of the
+        agentIdentifier semantic unit in an Agent PremisNode instance
 
         __Returns__
 
         * (PremisNode or None): an event PremisNode, or None
         """
-        pass
+        return self.agents_list.get_nodes(agentID)
 
     def get_agent_list(self):
         """
-        Returns a list containing each agent node.
+        Returns a list containing all agent nodes.
 
         __Returns__
 
-        * (list): the self.agents_list attribute
+        * (list): the Agent PremisNode instances in a PremisRecord instance
         """
         return self.agents_list.get_nodes()
 
@@ -295,22 +281,23 @@ class PremisRecord(object):
 
         __Args__
 
-        1. rightsID (str): A string which corresponds with one of the
-        rightsIdentifierValue's specified in a Rights PremisNode instance.
+        1. rightsID (str):  A string containing the XML serialization of the
+        rightsStatementIdentifier of one of the rightsStatement semantic units
+        in a Rights PremisNode instance
 
         __Returns__
 
         * (PremisNode or None): a rights PremisNode, or None
         """
-        pass
+        self.rights_list.get_nodes(rightsID)
 
     def get_rights_list(self):
         """
-        Returns a list containing each rights node.
+        Returns a list containing all rights nodes.
 
         __Returns__
 
-        * (list): the self.rights_list attribute
+        * (list): the Rights PremisNode instances in a PremisRecord instance
         """
         return self.rights_list.get_nodes()
 

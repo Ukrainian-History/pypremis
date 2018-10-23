@@ -32,13 +32,18 @@ class NodeSet:
 
         If identifier is None, then return a list of all nodes in the NodeSet.
         """
-        identifier_type = type(identifier)
-        if identifier_type is str:
-            return [self.nodes[identifier]]
-        if identifier_type is list:
-            return [self.nodes[key] for key in identifier]
+        try:
+            identifier_type = type(identifier)
+            if identifier_type is str:
+                return [self.nodes[identifier]]
+            if identifier_type is list:
+                return [self.nodes[key] for key in identifier]
+        except KeyError:
+            return [None]
+
         if identifier is None:
             return list(self.nodes.values())  # TODO oh dear, what if there are multiple keys for the same object?
+
         return []  # in the case of a nonsensical identifier, return an empty list
 
     def append(self, node):

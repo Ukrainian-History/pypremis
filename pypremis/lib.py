@@ -53,6 +53,8 @@ class NodeSet:
         """
         node_type = type(node)
 
+        keys = []
+
         if node_type == Object:
             keys = [str(identifier.toXML()) for identifier in node.get_objectIdentifier()]
 
@@ -188,7 +190,7 @@ class PremisRecord(object):
 
         * (PremisNode or None): an event PremisNode, or None
         """
-        self.events_list.get_nodes(eventID)[0]
+        return self.events_list.get_nodes(eventID)[0]
 
     def get_event_list(self):
         """
@@ -223,7 +225,7 @@ class PremisRecord(object):
 
         * (PremisNode or None): an object PremisNode, or None
         """
-        self.objects_list.get_nodes(objID)[0]
+        return self.objects_list.get_nodes(objID)[0]
 
     def get_object_list(self):
         """
@@ -294,7 +296,7 @@ class PremisRecord(object):
 
         * (PremisNode or None): a rights PremisNode, or None
         """
-        self.rights_list.get_nodes(rightsID)[0]
+        return self.rights_list.get_nodes(rightsID)[0]
 
     def get_rights_list(self):
         """

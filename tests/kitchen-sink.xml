@@ -53,7 +53,6 @@ to exersize some particular features of pypremis that may be problematic. -->
           <premis:formatRegistryKey>x-fmt/394</premis:formatRegistryKey>
           <premis:formatRegistryRole authority="http://id.loc.gov/vocabulary/preservation/formatRegistryRole" valueURI="http://id.loc.gov/vocabulary/preservation/formatRegistryRole/spe">specification</premis:formatRegistryRole>
         </premis:formatRegistry>
-        <premis:formatNote/>
       </premis:format>
       <premis:inhibitors>
         <premis:inhibitorType authority="inhibitorType" authorityURI="http://id.loc.gov/vocabulary/preservation/inhibitorType" valueURI="http://id.loc.gov/vocabulary/preservation/inhibitorType/pas">Password protection</premis:inhibitorType>

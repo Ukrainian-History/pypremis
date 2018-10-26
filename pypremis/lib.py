@@ -59,6 +59,7 @@ class NodeSet:
             keys = [str(identifier.toXML()) for identifier in node.get_objectIdentifier()]
 
         if node_type == Event:
+            dum = node.get_eventIdentifier().toXML()
             keys = [str(node.get_eventIdentifier().toXML())]
 
         if node_type == Agent:
@@ -69,6 +70,10 @@ class NodeSet:
                     for rights_statement in node.get_rightsStatement()]
 
         for key in keys:
+            if key in self.nodes.keys():
+                print("{} key collision!".format(key))
+            else:
+                print(key)
             self.nodes[key] = node
 
 
@@ -362,7 +367,8 @@ class PremisRecord(object):
                 raise ValueError("No supplied filepath.")
             filepath = self.get_filepath()
         factory = factory(filepath)
-        for event in factory.find_events():
+        dum = factory.find_events()
+        for event in dum:
             self.add_event(event)
         for agent in factory.find_agents():
             self.add_agent(agent)

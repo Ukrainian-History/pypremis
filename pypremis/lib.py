@@ -11,12 +11,20 @@ and facilitate writing them to reading and writing serializations.
 """
 
 
+class DuplicateIdentifierError(ValueError):
+    """Raised when an attempt is made to append a node with an existing identifier"""
+
+
 class NodeSet:
     """
-    A utility container class for internal use by PremisRecord. Holds pypremis nodes indexed by identifier.
-    The identifiers are strings containing the XML serializations of the PREMIS identifier sub-nodes of the top-level
-    node. Note that Object and Agent nodes may have more than one identifier, and Rights nodes may have more than
-    one rightsStatementIdentifier. In those cases, the same object will be indexed by more than one identifier.
+    A utility container class for internal use by PremisRecord to hold and retrieve pypremis nodes
+    indexed by identifier.
+
+    Uses a list to store the actual nodes, along with a dictionary that maps identifiers to indexes of the
+    node list. The identifiers are strings containing the XML serializations of the PREMIS identifier sub-nodes
+    of the top-level node. Note that Object and Agent nodes may have more than one identifier, and Rights nodes
+    may have more than one rightsStatementIdentifier. In those cases, the same object will be indexed by more than
+    one identifier.
 
     The purpose of this subsidiary class is to facilitate the retrieval of nodes by identifier.
     """
@@ -24,7 +32,8 @@ class NodeSet:
         """
         Initializes an empty NodeSet object.
         """
-        self.nodes = {}
+        self.nodes = []
+        self.identifiers = {}
 
     def get_nodes(self, identifier=None):
         """
@@ -35,15 +44,14 @@ class NodeSet:
         try:
             identifier_type = type(identifier)
             if identifier_type is str:
-                return [self.nodes[identifier]]
+                return [self.nodes[self.identifiers[identifier]]]
             if identifier_type is list:
-                return [self.nodes[key] for key in identifier]
+                return [self.nodes[self.identifiers[key]] for key in identifier]
         except KeyError:
             return [None]
 
         if identifier is None:
-            return list(dict.fromkeys(list(self.nodes.values())))
-            # TODO if there are multiple keys for the same object, we get duplicate return values...
+            return self.nodes
 
         return []  # in the case of a nonsensical identifier, return an empty list
 
@@ -70,12 +78,13 @@ class NodeSet:
             keys = [repr(rights_statement.get_rightsStatementIdentifier())
                     for rights_statement in node.get_rightsStatement()]
 
+        index = len(self.nodes)
+        self.nodes.append(node)
+
         for key in keys:
-            if key in self.nodes.keys():
-                print("{} key collision!".format(key))
-            else:
-                print(key)
-            self.nodes[key] = node
+            if key in self.identifiers.keys():
+                raise DuplicateIdentifierError
+            self.identifiers[key] = index
 
 
 class PremisRecord(object):

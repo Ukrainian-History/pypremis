@@ -486,21 +486,6 @@ to exersize some particular features of pypremis that may be problematic. -->
       <premis:linkingObjectIdentifierValue>001</premis:linkingObjectIdentifierValue>
     </premis:linkingObjectIdentifier>
   </premis:event>
-  <premis:event>
-    <premis:eventIdentifier>
-      <premis:eventIdentifierType>loco</premis:eventIdentifierType>
-      <premis:eventIdentifierValue>12345654323455667876</premis:eventIdentifierValue>
-    </premis:eventIdentifier> <!-- intentional identifier collision -->
-    <premis:eventType>fixity check</premis:eventType>
-    <premis:eventDateTime>2014-05-07T23:22:22</premis:eventDateTime>
-    <premis:eventOutcomeInformation>
-      <premis:eventOutcome>OK</premis:eventOutcome>
-    </premis:eventOutcomeInformation>
-    <premis:linkingObjectIdentifier>
-      <premis:linkingObjectIdentifierType>local</premis:linkingObjectIdentifierType>
-      <premis:linkingObjectIdentifierValue>001</premis:linkingObjectIdentifierValue>
-    </premis:linkingObjectIdentifier>
-  </premis:event>
   <premis:agent>
     <premis:agentIdentifier>
       <premis:agentIdentifierType>local</premis:agentIdentifierType>

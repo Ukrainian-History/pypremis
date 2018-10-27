@@ -57,8 +57,8 @@ class NodeSet:
 
     def append(self, node):
         """
-        Add a node to a NodeSet. If there is an existing NodeSet node with the same identifier, then it
-        will be replaced with the new node.
+        Add a node to a NodeSet. If there is an existing NodeSet node with the same identifier, it raises
+        a DuplicateIdentifierError.
         """
         node_type = type(node)
 
@@ -68,7 +68,6 @@ class NodeSet:
             keys = [repr(identifier) for identifier in node.get_objectIdentifier()]
 
         if node_type == Event:
-            dum = node.get_eventIdentifier().toXML()
             keys = [repr(node.get_eventIdentifier())]
 
         if node_type == Agent:
@@ -377,8 +376,7 @@ class PremisRecord(object):
                 raise ValueError("No supplied filepath.")
             filepath = self.get_filepath()
         factory = factory(filepath)
-        dum = factory.find_events()
-        for event in dum:
+        for event in factory.find_events():
             self.add_event(event)
         for agent in factory.find_agents():
             self.add_agent(agent)

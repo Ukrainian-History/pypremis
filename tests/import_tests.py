@@ -17,17 +17,17 @@ class PypremisImportTestCase(unittest.TestCase):
         global kitchen_sink
         kitchen_sink = PremisRecord(frompath='kitchen-sink.xml')
 
-    def test_event_import(self):
-        self.assertTrue(len(kitchen_sink.get_event_list()) == 24)
+    def test_event_count(self):
+        self.assertTrue(len(kitchen_sink.get_event_list()) == 23)
 
-    def test_object_import(self):
-        pass
+    def test_object_count(self):
+        self.assertTrue(len(kitchen_sink.get_object_list()) == 2)
 
-    def test_agent_import(self):
-        pass
+    def test_agent_count(self):
+        self.assertTrue(len(kitchen_sink.get_agent_list()) == 3)
 
-    def test_rights_import(self):
-        pass
+    def test_rights_count(self):
+        self.assertTrue(len(kitchen_sink.get_rights_list()) == 1)
 
 
 if __name__ == '__main__':

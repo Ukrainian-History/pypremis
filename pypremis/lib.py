@@ -42,7 +42,8 @@ class NodeSet:
             return [None]
 
         if identifier is None:
-            return list(self.nodes.values())  # TODO oh dear, what if there are multiple keys for the same object?
+            return list(dict.fromkeys(list(self.nodes.values())))
+            # TODO if there are multiple keys for the same object, we get duplicate return values...
 
         return []  # in the case of a nonsensical identifier, return an empty list
 
@@ -56,17 +57,17 @@ class NodeSet:
         keys = []
 
         if node_type == Object:
-            keys = [str(identifier.toXML()) for identifier in node.get_objectIdentifier()]
+            keys = [repr(identifier) for identifier in node.get_objectIdentifier()]
 
         if node_type == Event:
             dum = node.get_eventIdentifier().toXML()
-            keys = [str(node.get_eventIdentifier().toXML())]
+            keys = [repr(node.get_eventIdentifier())]
 
         if node_type == Agent:
-            keys = [str(identifier.toXML()) for identifier in node.get_agentIdentifier()]
+            keys = [repr(identifier) for identifier in node.get_agentIdentifier()]
 
         if node_type == Rights:
-            keys = [str(rights_statement.get_rightsStatementIdentifier().toXML())
+            keys = [repr(rights_statement.get_rightsStatementIdentifier())
                     for rights_statement in node.get_rightsStatement()]
 
         for key in keys:

@@ -2,13 +2,11 @@ from setuptools import setup
 
 setup(
     name = 'pypremis',
-    version = '1.0.0b',
-    url = 'https://github.com/uchicago-library/uchicagoldr-premiswork',
-    author = "Brian Balsamo <balsamo@uchicago.edu>",
-    author_email = "balsamo@uchicago.edu",
+    version = '1.0.1b',
+    url = 'https://github.com/bnbalsamo/pypremis',
     packages = ['pypremis'],
     description = "A set of python classes for working with PREMIS records.",
-    keywords = ["uchicago", "repository", "file-level", "processing", "premis",
+    keywords = ["repository", "file-level", "processing", "premis",
                 "metadata", "preservation"],
     classifiers = [
         "Programming Language :: Python",

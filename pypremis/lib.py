@@ -6,9 +6,84 @@ from pypremis.nodes import *
 """
 ### Classes for general use in pypremis ###
 
-1. **PremisRecord** is a containing class meant to hold a list of sorted nodes
+1. **PremisRecord** is a containing class meant to hold nodes
 and facilitate writing them to reading and writing serializations.
 """
+
+
+class DuplicateIdentifierError(ValueError):
+    """Raised when an attempt is made to append a node with an existing identifier"""
+
+
+class NodeSet:
+    """
+    A utility container class for internal use by PremisRecord to hold and retrieve pypremis nodes
+    indexed by identifier.
+
+    Uses a list to store the actual nodes, along with a dictionary that maps identifiers to indexes of the
+    node list. The identifiers are strings containing the XML serializations of the PREMIS identifier sub-nodes
+    of the top-level node. Note that Object and Agent nodes may have more than one identifier, and Rights nodes
+    may have more than one rightsStatementIdentifier. In those cases, the same object will be indexed by more than
+    one identifier.
+
+    The purpose of this subsidiary class is to facilitate the retrieval of nodes by identifier.
+    """
+    def __init__(self):
+        """
+        Initializes an empty NodeSet object.
+        """
+        self.nodes = []
+        self.identifiers = {}
+
+    def get_nodes(self, identifier=None):
+        """
+        Return a list of nodes corresponding to a given identifier (or list of identifiers).
+
+        If identifier is None, then return a list of all nodes in the NodeSet.
+        """
+        try:
+            identifier_type = type(identifier)
+            if identifier_type is str:
+                return [self.nodes[self.identifiers[identifier]]]
+            if identifier_type is list:
+                return [self.nodes[self.identifiers[key]] for key in identifier]
+        except KeyError:
+            return [None]
+
+        if identifier is None:
+            return self.nodes
+
+        return []  # in the case of a nonsensical identifier, return an empty list
+
+    def append(self, node):
+        """
+        Add a node to a NodeSet. If there is an existing NodeSet node with the same identifier, it raises
+        a DuplicateIdentifierError.
+        """
+        node_type = type(node)
+
+        keys = []
+
+        if node_type == Object:
+            keys = [repr(identifier) for identifier in node.get_objectIdentifier()]
+
+        if node_type == Event:
+            keys = [repr(node.get_eventIdentifier())]
+
+        if node_type == Agent:
+            keys = [repr(identifier) for identifier in node.get_agentIdentifier()]
+
+        if node_type == Rights:
+            keys = [repr(rights_statement.get_rightsStatementIdentifier())
+                    for rights_statement in node.get_rightsStatement()]
+
+        index = len(self.nodes)
+        self.nodes.append(node)
+
+        for key in keys:
+            if key in self.identifiers.keys():
+                raise DuplicateIdentifierError
+            self.identifiers[key] = index
 
 
 class PremisRecord(object):
@@ -49,10 +124,10 @@ class PremisRecord(object):
             raise ValueError("Must supply either a valid file or at least "
                              "one array of valid PREMIS objects.")
 
-        self.events_list = []
-        self.objects_list = []
-        self.agents_list = []
-        self.rights_list = []
+        self.events_list = NodeSet()
+        self.objects_list = NodeSet()
+        self.agents_list = NodeSet()
+        self.rights_list = NodeSet()
         self.filepath = None
 
         if frompath:
@@ -122,24 +197,24 @@ class PremisRecord(object):
 
         __Args__
 
-        1. eventID (str): A string which corresponds to one of the
-        eventIdentifierValue's specified in an Event PremisNode instance.
+        1. eventID (str): A string containing the XML serialization of the
+        eventIdentifier semantic unit in an Event PremisNode instance
 
         __Returns__
 
         * (PremisNode or None): an event PremisNode, or None
         """
-        pass
+        return self.events_list.get_nodes(eventID)[0]
 
     def get_event_list(self):
         """
-        Returns a list containing each associated event node.
+        Returns a list containing all event nodes.
 
         __Returns__
 
-        * (list): the self.events_list attribute
+        * (list): the Event PremisNode instances in a PremisRecord instance
         """
-        return self.events_list
+        return self.events_list.get_nodes()
 
     def add_object(self, obj):
         """
@@ -157,24 +232,24 @@ class PremisRecord(object):
 
         __Args__
 
-        1. objID (str): A string which corresponds with one of the
-        objectIdentifierValue's specified in an Object PremisNode instance
+        1. objID (str): A string containing the XML serialization of one of the
+        objectIdentifier semantic units in an Object PremisNode instance
 
         __Returns__
 
         * (PremisNode or None): an object PremisNode, or None
         """
-        pass
+        return self.objects_list.get_nodes(objID)[0]
 
     def get_object_list(self):
         """
-        Returns a list containing each object node.
+        Returns a list containing all object nodes.
 
         __Returns__
 
-        * (list): the self.objects_list attribute
+        * (list): the Object PremisNode instances in a PremisRecord instance
         """
-        return self.objects_list
+        return self.objects_list.get_nodes()
 
     def add_agent(self, agent):
         """
@@ -192,24 +267,24 @@ class PremisRecord(object):
 
         __Args__
 
-        1. agentID (str): A string which corresponds with one of the
-        agentIdentifierValue's specified in an Agent PremisNode instance
+        1. agentID (str): A string containing the XML serialization of one of the
+        agentIdentifier semantic unit in an Agent PremisNode instance
 
         __Returns__
 
         * (PremisNode or None): an event PremisNode, or None
         """
-        pass
+        return self.agents_list.get_nodes(agentID)[0]
 
     def get_agent_list(self):
         """
-        Returns a list containing each agent node.
+        Returns a list containing all agent nodes.
 
         __Returns__
 
-        * (list): the self.agents_list attribute
+        * (list): the Agent PremisNode instances in a PremisRecord instance
         """
-        return self.agents_list
+        return self.agents_list.get_nodes()
 
     def add_rights(self, rights):
         """
@@ -227,24 +302,25 @@ class PremisRecord(object):
 
         __Args__
 
-        1. rightsID (str): A string which corresponds with one of the
-        rightsIdentifierValue's specified in a Rights PremisNode instance.
+        1. rightsID (str):  A string containing the XML serialization of the
+        rightsStatementIdentifier of one of the rightsStatement semantic units
+        in a Rights PremisNode instance
 
         __Returns__
 
         * (PremisNode or None): a rights PremisNode, or None
         """
-        pass
+        return self.rights_list.get_nodes(rightsID)[0]
 
     def get_rights_list(self):
         """
-        Returns a list containing each rights node.
+        Returns a list containing all rights nodes.
 
         __Returns__
 
-        * (list): the self.rights_list attribute
+        * (list): the Rights PremisNode instances in a PremisRecord instance
         """
-        return self.rights_list
+        return self.rights_list.get_nodes()
 
     def set_filepath(self, filepath):
         """
